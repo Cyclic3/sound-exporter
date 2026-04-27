@@ -1,0 +1,12 @@
+[package]
+name = "sound-exporter"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = "^0.8.9"
+circular-buffer = "^1.2.0"
+cpal = "^0.17.3"
+# prometheus-client = "^0.24.1"
+# prometheus-client-derive-encode = "^0.5.0"
+tokio = { version = "^1.52.1", features = ["macros", "rt-multi-thread"] }
