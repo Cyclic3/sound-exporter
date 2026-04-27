@@ -6,6 +6,7 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use axum::Router;
 use clap::Parser;
+use cpal::traits::{DeviceTrait, HostTrait};
 use std::sync::Arc;
 
 use crate::audio::AudioProcessor;
@@ -20,7 +21,10 @@ struct Args {
     bind_address: String,
     #[arg(short('d'), long("device"))]
     /// The device id for the microphone to monitor. Defaults to the system's default input.
-    input_device: Option<String>
+    input_device: Option<String>,
+    /// List all the input devices and then exit
+    #[arg(short('l'), long("list"))]
+    list: bool
 }
 
 pub async fn metrics_handler(State(processor): State<Arc<AudioProcessor>>) -> impl IntoResponse {
@@ -41,6 +45,7 @@ sound_momentary {momentary}
 # HELP sound_short_term The short-term LUFS from the server
 # TYPE sound_short_term gauge
 sound_short_term {short_term}
+# EOF
 "
         )))
         .unwrap()
@@ -49,6 +54,13 @@ sound_short_term {short_term}
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
+    if args.list {
+        let host = cpal::default_host();
+        for i in host.input_devices().expect("No devices found!") {
+            println!("{}", i.description().map(|i| i.to_string()).unwrap_or("UKNOWN DEVICE".to_string()));
+        }
+        return;
+    }
     let processor = AudioProcessor::new(args.input_device);
     let router = Router::new()
         .route("/metrics", get(metrics_handler))
