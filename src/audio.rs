@@ -39,7 +39,7 @@ impl AudioProcessor {
         let config = cpal::StreamConfig {
             channels: 1,
             sample_rate: 48000,
-            .. default_config.config()
+            buffer_size: cpal::BufferSize::Fixed(8192)
         };
         let data = Arc::new(Mutex::new(circular_buffer::CircularBuffer::from_iter(
             std::iter::repeat_n(0f32, 48000 * 3)
@@ -51,7 +51,7 @@ impl AudioProcessor {
             for i in samples {
                 data.push_front(processor.process(*i));
             }
-        }, |e| eprintln!("Stream error: {e}"), None).unwrap();
+        }, |e| panic!("Stream error: {e}"), None).unwrap();
         stream.play().unwrap();
         Self { _stream: stream, data }
     }
